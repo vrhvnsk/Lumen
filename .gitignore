@@ -1,0 +1,22 @@
+# Generated search index (rebuild with: python build_index.py)
+backend/data/faiss.index
+backend/data/index_info.json
+backend/data/tfidf_lsa.pkl
+backend/data/movies.db
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# Secrets and local settings: never commit these
+.env
+.env.*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

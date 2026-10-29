@@ -1,0 +1,2 @@
+# Only needed if you switch the optional database layer to PostgreSQL.
+psycopg2-binary>=2.9

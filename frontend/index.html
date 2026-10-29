@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Lumen: find a movie by describing it</title>
+  <meta name="description" content="Forgot the title? Describe the plot or pick a mood and find the movie by meaning, not keywords.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='14' fill='%23ffd58a'/%3E%3Ccircle cx='32' cy='32' r='26' fill='none' stroke='%23ffd58a' stroke-opacity='.4' stroke-width='3'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="glow" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <a class="brand" href="/">Lumen</a>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="headline">
+      <h1 id="headline">Forgot the title? Describe the movie.</h1>
+      <p class="lead">Search by what happens or how it feels. Lumen matches on meaning, so you don't need the right keywords.</p>
+
+      <div class="tabs" role="tablist" aria-label="Search type">
+        <button role="tab" id="tab-describe" aria-controls="panel-describe" aria-selected="true">Describe it</button>
+        <button role="tab" id="tab-mood" aria-controls="panel-mood" aria-selected="false" tabindex="-1">Pick a mood</button>
+      </div>
+
+      <form id="panel-describe" class="box" role="tabpanel" aria-labelledby="tab-describe">
+        <label class="sr-only" for="query">What happens in the movie?</label>
+        <textarea id="query" rows="2" maxlength="500"
+          placeholder="A woman wakes up with no memory and finds a key sewn into her coat"></textarea>
+        <div class="box-foot">
+          <span class="hint">Describe a scene, a feeling or the whole plot</span>
+          <button type="submit" class="go">Find movies</button>
+        </div>
+      </form>
+
+      <form id="panel-mood" class="box" role="tabpanel" aria-labelledby="tab-mood" hidden>
+        <div class="sliders" id="sliders"></div>
+        <label class="sr-only" for="mood-text">Add a theme (optional)</label>
+        <input id="mood-text" type="text" maxlength="500" placeholder="Add a theme, for example: heist, road trip, small town">
+        <div class="box-foot">
+          <span class="hint">Move at least one slider or add a theme</span>
+          <button type="submit" class="go">Find movies</button>
+        </div>
+      </form>
+
+      <div class="examples" id="examples" aria-label="Example searches"></div>
+    </section>
+
+    <section class="results" aria-labelledby="results-heading">
+      <h2 id="results-heading" class="results-heading" hidden></h2>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
+      <div id="results" class="grid"></div>
+    </section>
+  </main>
+
+  <dialog id="detail" aria-labelledby="detail-title">
+    <button class="close" id="detail-close" aria-label="Close details">Close</button>
+
+    <div class="detail-grid">
+      <aside class="info">
+        <div class="info-poster" id="detail-poster"></div>
+        <h2 id="detail-title"></h2>
+        <p class="meta" id="detail-meta"></p>
+        <p class="why" id="detail-why" hidden></p>
+        <p class="overview" id="detail-overview"></p>
+        <p class="credits" id="detail-credits"></p>
+        <div class="chips" id="detail-themes"></div>
+      </aside>
+
+      <section class="web" aria-labelledby="web-title">
+        <div class="web-head">
+          <h3 id="web-title">Similar movies</h3>
+          <div class="size" role="group" aria-label="How many movies to show">
+            <button type="button" data-size="small" aria-pressed="false">Few</button>
+            <button type="button" data-size="medium" aria-pressed="true">More</button>
+            <button type="button" data-size="large" aria-pressed="false">Most</button>
+          </div>
+        </div>
+
+        <div class="graph-wrap" id="graph-wrap">
+          <svg id="graph" viewBox="0 0 900 600" role="img" aria-label="Web of similar movies"></svg>
+          <div class="tip" id="tip" hidden></div>
+        </div>
+        <p class="hint">Closer dots are more similar. Click a dot to jump to that movie; hover to preview it.</p>
+
+        <details class="list">
+          <summary>See the list</summary>
+          <h4>Closest</h4>
+          <ol class="similar" id="similar"></ol>
+          <h4>Further out</h4>
+          <ol class="similar" id="similar-outer"></ol>
+        </details>
+      </section>
+    </div>
+  </dialog>
+
+  <footer class="site-footer">
+    <p>This product uses the TMDB API but is not endorsed or certified by TMDB. Movie data and posters come from TMDB.</p>
+  </footer>
+
+  <noscript><p class="status">Lumen needs JavaScript to search.</p></noscript>
+  <script src="app.js"></script>
+</body>
+</html>

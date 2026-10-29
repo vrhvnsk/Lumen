@@ -1,0 +1,10 @@
+# Everything needed to run the app with real semantic search.
+fastapi>=0.110,<1
+uvicorn[standard]>=0.29,<1
+pydantic>=2.6,<3
+faiss-cpu>=1.8,<2
+numpy>=1.26
+scikit-learn>=1.4          # offline fallback embedder
+sentence-transformers>=2.6 # semantic embeddings (large: pulls in PyTorch)
+sqlalchemy>=2.0,<3         # optional database layer
+requests>=2.31             # only for scripts/tmdb_loader.py
