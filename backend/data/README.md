@@ -16,7 +16,6 @@ A list of movies in this format (UTF-8 JSON):
 | `overview` | string | Plot summary, at least 30 characters after cleaning |
 | `poster_url` | string or null | TMDB image URL |
 
-Source: [TMDB](https://www.themoviedb.org/), fetched with `scripts/tmdb_loader.py`. This product uses the TMDB API but is not endorsed or certified by TMDB. TMDB's terms of use apply to this data; check them before reusing or redistributing it.
 
 ## Cleaning
 
