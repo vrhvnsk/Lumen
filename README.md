@@ -45,7 +45,7 @@ python -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 
-python build_index.py              # one-time: embeds all movies and builds the index
+# python build_index.py             # a ready-made index is already included, it'd rebuild the index from zero (around 2 hours for 9k movies)
 uvicorn app.main:app --reload
 ```
 
