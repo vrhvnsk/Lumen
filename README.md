@@ -12,6 +12,10 @@
 - **Simple explanations.** Each result shows its similarity and which of its genres/themes overlap with your query. This is a transparent text-overlap heuristic, not a second model.
 - **No build step.** The website is plain HTML, CSS and JavaScript, served by the same FastAPI app as the API.
 
+
+<img width="1731" height="1669" alt="example" src="https://github.com/user-attachments/assets/d04aff19-0fa0-4d95-acd5-9c4fb29fa6a8" />
+<img width="1867" height="977" alt="Снимок экрана_29-10-2026_193224_127 0 0 1" src="https://github.com/user-attachments/assets/e2229415-1e71-4253-ad5e-f21297922758" />
+
 ## How it works
 
 ```
