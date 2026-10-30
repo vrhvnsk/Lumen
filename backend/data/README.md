@@ -26,11 +26,3 @@ A list of movies in this format (UTF-8 JSON):
 
 and renumbers the ids. Different films that share a title, such as remakes, are kept. The loader runs the same cleaning automatically.
 
-## Generated files (git-ignored)
-
-`build_index.py` creates these next to the dataset. Delete and regenerate them whenever you like:
-
-- `faiss.index`: one vector per movie
-- `index_info.json`: which embedding backend built the index
-- `tfidf_lsa.pkl`: only for `--offline` builds
-- `movies.db`: only if you run the optional `seed_db.py`
