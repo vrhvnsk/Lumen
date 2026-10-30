@@ -2,9 +2,7 @@
 
 **Forgot the title? Describe the movie.** A semantic movie search engine: type what happens in a film, or pick a mood, and it finds matches by *meaning* rather than keywords. Click any result to explore a graph of similar movies.
 
-<!-- Add a screenshot or GIF here once the app is running:
-![Lumen](docs/screenshot.png)
--->
+<img width="1731" height="3513" alt="Снимок экрана_29-10-2026_192942_127 0 0 1" src="https://github.com/user-attachments/assets/c69b51c2-1172-43d7-b6b7-c08e373b3d52" />
 
 ## Features
 
@@ -17,16 +15,16 @@
 ## How it works
 
 ```
-data/movies_seed.json   9,034 movies from TMDB
+data/movies_seed.json   about 9000 movies from TMDB
         │  one text per movie: overview + genres + keywords + director + cast
         ▼
 embeddings              sentence-transformers (meaning)  |  offline TF-IDF/LSA fallback
         ▼
 FAISS index             cosine similarity over normalised vectors
         │
-        ├── POST /api/search        description → embed → nearest movies
-        ├── POST /api/mood-search   slider weights → blended vector → nearest movies
-        └── GET  /api/graph/{id}    a movie's stored vector → its neighbours, and theirs
+        ├── POST /api/search        description --> embed --> nearest movies
+        ├── POST /api/mood-search   slider weights --> blended vector --> nearest movies
+        └── GET  /api/graph/{id}    a movie's stored vector --> its neighbours and theirs etc.
 ```
 
 Searching embeds your text with the same model that embedded the movies, then asks FAISS for the closest vectors. Mood search embeds one short phrase per mood (for example "a bleak, disturbing, grim, unsettling story"), mixes them by slider weight and searches with the result.
@@ -62,11 +60,9 @@ The repository includes a ready-to-use dataset. To fetch a fresh one you need a 
 ```bash
 cd backend
 export TMDB_API_KEY=your_key_here          # PowerShell: $env:TMDB_API_KEY="your_key_here"
-python -m scripts.tmdb_loader --pages 500  # up to 10,000 movies, takes about an hour
+python -m scripts.tmdb_loader --pages 500  # up to 10,000 movies, takes about two hours
 python build_index.py
 ```
-
-The key is only read from the environment and must never be committed. See [`backend/data/README.md`](backend/data/README.md) for the data format and cleaning rules.
 
 ## API
 
@@ -129,14 +125,6 @@ pytest
 ```
 
 The tests build a small offline index in a temporary folder and cover every API endpoint, input validation, the similarity web, the data cleaning and the TMDB response parser. They do not call the TMDB API and do not test the quality of real semantic embeddings.
-
-## Limitations
-
-- **Search quality depends on the embedding backend.** With the offline fallback results are noticeably weaker than with sentence-transformers.
-- **The dataset is a snapshot of TMDB's most popular movies.** It includes many non-English and recent or upcoming titles, and mature content is not specifically filtered beyond TMDB's default.
-- **Explanations are heuristics.** "Matched themes" shows overlapping words, not why a model ranked a movie.
-- **Similarity is cosine similarity, not a probability.** Typical values are well below 100%.
-- **Everything is loaded in memory.** Fine for ten thousand movies; a much larger catalogue would need a different index.
 
 ## Ideas for next steps
 
