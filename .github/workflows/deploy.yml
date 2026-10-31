@@ -1,0 +1,32 @@
+
+name: Deploy Lumen
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to Oracle Cloud
+        env:
+          HOST: ${{ secrets.ORACLE_HOST }}
+          USER: ${{ secrets.ORACLE_USER }}
+          SSH_KEY: ${{ secrets.ORACLE_SSH_KEY }}
+          PORT: ${{ secrets.ORACLE_PORT }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/lumen_deploy
+          chmod 600 ~/.ssh/lumen_deploy
+
+          ssh-keyscan -p "$PORT" -H "$HOST" >> ~/.ssh/known_hosts
+
+          ssh -i ~/.ssh/lumen_deploy \
+            -p "$PORT" \
+            -o StrictHostKeyChecking=yes \
+            "$USER@$HOST" \
+            'cd /opt/lumen && git pull --ff-only origin main && sudo -n systemctl restart lumen && sudo -n systemctl is-active --quiet lumen'
