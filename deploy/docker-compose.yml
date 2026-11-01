@@ -1,0 +1,34 @@
+# Lumen + automatic HTTPS (Caddy) on a single server.
+# See docs/DEPLOY.md. Run from this folder:  docker compose up -d --build
+
+services:
+  lumen:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        EMBEDDING_MODEL: ${EMBEDDING_MODEL:-sentence-transformers/all-mpnet-base-v2}
+    restart: unless-stopped
+    environment:
+      PORT: "7860"
+    expose:
+      - "7860"          # only reachable by Caddy, not from the internet
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - lumen
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in deploy/.env, for example lumen.example.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data         # keeps the HTTPS certificate across restarts
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

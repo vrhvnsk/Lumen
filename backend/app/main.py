@@ -1,5 +1,6 @@
 """FastAPI application: JSON API under /api plus the static website at /."""
 from contextlib import asynccontextmanager
+from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -26,24 +27,39 @@ app.add_middleware(
 )
 
 
-class SearchRequest(BaseModel):
+class Filters(BaseModel):
+    """"Hide obscure films" options, shared by both search types."""
+    min_popularity: float = Field(default=0.0, ge=0, le=1,
+                                  description="keep only films above this popularity percentile (0.6 = best-known 40 %)")
+    min_votes: int = Field(default=0, ge=0,
+                           description="minimum TMDB vote count (ignored if the dataset has no vote data)")
+    min_rating: float = Field(default=0.0, ge=0, le=10,
+                              description="minimum TMDB rating (ignored if the dataset has no rating data)")
+
+
+class SearchRequest(Filters):
     query: str = Field(min_length=1, max_length=500)
     k: int = Field(default=20, ge=1, le=100)
+    popularity: float = Field(default=0.0, ge=0, le=1, description="0 = best match first, 1 = most popular first")
+    title_weight: Optional[float] = Field(default=None, ge=0, le=1,
+                                          description="0 = ignore titles, 1 = titles dominate, null = decide automatically")
 
 
-class MoodSearchRequest(BaseModel):
+class MoodSearchRequest(Filters):
     happy: float = Field(default=0.0, ge=0, le=1)
     dark: float = Field(default=0.0, ge=0, le=1)
     romantic: float = Field(default=0.0, ge=0, le=1)
     fast_paced: float = Field(default=0.0, ge=0, le=1)
     base_query: str = Field(default="", max_length=500)
     k: int = Field(default=20, ge=1, le=100)
+    popularity: float = Field(default=0.0, ge=0, le=1, description="0 = best match first, 1 = most popular first")
 
 
 @app.get("/api/health")
 def health():
     engine = get_engine()
-    return {"status": "ok", "movies_indexed": len(engine.movies), "backend": engine.backend_name}
+    return {"status": "ok", "movies_indexed": len(engine.movies), "backend": engine.backend_name,
+            "has_votes": engine.has_votes}
 
 
 @app.get("/api/movies")
@@ -66,7 +82,11 @@ def search(req: SearchRequest):
     query = req.query.strip()
     if not query:
         raise HTTPException(status_code=400, detail="Query cannot be empty")
-    return {"query": query, "results": get_engine().search(query, k=req.k)}
+    found = get_engine().search_full(
+        query, k=req.k, popularity=req.popularity, title_weight=req.title_weight,
+        min_popularity=req.min_popularity, min_votes=req.min_votes, min_rating=req.min_rating,
+    )
+    return {"query": query, "weights": found["weights"], "anchor": found["anchor"], "results": found["results"]}
 
 
 @app.post("/api/mood-search")
@@ -74,7 +94,10 @@ def mood_search(req: MoodSearchRequest):
     sliders = {"happy": req.happy, "dark": req.dark, "romantic": req.romantic,
                "fast_paced": req.fast_paced}
     try:
-        results = get_engine().mood_search(sliders, k=req.k, base_query=req.base_query)
+        results = get_engine().mood_search(
+            sliders, k=req.k, base_query=req.base_query, popularity=req.popularity,
+            min_popularity=req.min_popularity, min_votes=req.min_votes, min_rating=req.min_rating,
+        )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return {"sliders": sliders, "results": results}
