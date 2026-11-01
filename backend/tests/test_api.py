@@ -27,34 +27,6 @@ def test_search_validates_k(client):
     assert client.post("/api/search", json={"query": "love", "k": 101}).status_code == 422
 
 
-def test_popularity_favours_better_known_films(client):
-    """In the test data a lower id means more popular (see SearchEngine._popularity_scores)."""
-    query = {"query": "a story about love and family", "k": 10}
-    by_match = client.post("/api/search", json={**query, "popularity": 0}).json()["results"]
-    by_fame = client.post("/api/search", json={**query, "popularity": 0.9}).json()["results"]
-
-    mean_id = lambda results: sum(m["id"] for m in results) / len(results)
-    assert mean_id(by_fame) < mean_id(by_match)          # more popular films on top
-    assert len(by_fame) == len(by_match) == 10
-
-    # popularity=0 is exactly the plain similarity order
-    scores = [m["explanation"]["similarity_pct"] for m in by_match]
-    assert scores == sorted(scores, reverse=True)
-
-
-def test_popularity_changes_order_not_scores(client):
-    # The shown similarity is always the real similarity, even when re-ranked.
-    r = client.post("/api/search", json={"query": "heist crime", "k": 5, "popularity": 1}).json()["results"]
-    assert all(0 < m["explanation"]["similarity_pct"] <= 100 for m in r)
-
-
-def test_popularity_is_validated_and_works_for_mood_search(client):
-    assert client.post("/api/search", json={"query": "x", "popularity": 1.5}).status_code == 422
-    assert client.post("/api/search", json={"query": "x", "popularity": -0.1}).status_code == 422
-    r = client.post("/api/mood-search", json={"dark": 1, "k": 5, "popularity": 0.7})
-    assert r.status_code == 200 and len(r.json()["results"]) == 5
-
-
 def test_mood_search(client):
     r = client.post("/api/mood-search", json={"dark": 1.0, "k": 4})
     assert r.status_code == 200

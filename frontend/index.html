@@ -50,32 +50,7 @@
     </section>
 
     <section class="results" aria-labelledby="results-heading">
-      <div class="results-head" id="results-head" hidden>
-        <h2 id="results-heading" class="results-heading"></h2>
-        <div class="tools">
-          <div class="seg" id="sort-by" role="group" aria-label="Order of results">
-            <button type="button" data-popularity="0" aria-pressed="false">Best match</button>
-            <button type="button" data-popularity="0.35" aria-pressed="true">Balanced</button>
-            <button type="button" data-popularity="0.7" aria-pressed="false">Popular first</button>
-          </div>
-          <button type="button" class="toggle" id="hide-obscure" aria-pressed="false">Hide obscure films</button>
-          <button type="button" class="toggle" id="finetune-toggle" aria-expanded="false" aria-controls="finetune">Fine-tune</button>
-        </div>
-      </div>
-
-      <div class="finetune" id="finetune" hidden>
-        <div class="slider">
-          <label for="ft-popularity">Popularity <output id="ft-popularity-out" for="ft-popularity">35</output></label>
-          <input type="range" id="ft-popularity" min="0" max="100" value="35">
-          <p class="hint">How much well-known films are favoured over closer matches.</p>
-        </div>
-        <div class="slider">
-          <label for="ft-title">Title matching <output id="ft-title-out" for="ft-title">Auto</output></label>
-          <input type="range" id="ft-title" min="0" max="100" value="50" disabled>
-          <label class="auto"><input type="checkbox" id="ft-title-auto" checked> Decide automatically</label>
-          <p class="hint">How much the film's name counts, as opposed to its plot. Text search only.</p>
-        </div>
-      </div>
+      <h2 id="results-heading" class="results-heading" hidden></h2>
       <p id="status" class="status" role="status" aria-live="polite"></p>
       <div id="results" class="grid"></div>
     </section>
@@ -98,7 +73,7 @@
       <section class="web" aria-labelledby="web-title">
         <div class="web-head">
           <h3 id="web-title">Similar movies</h3>
-          <div class="seg" id="web-size" role="group" aria-label="How many movies to show">
+          <div class="size" role="group" aria-label="How many movies to show">
             <button type="button" data-size="small" aria-pressed="false">Few</button>
             <button type="button" data-size="medium" aria-pressed="true">More</button>
             <button type="button" data-size="large" aria-pressed="false">Most</button>

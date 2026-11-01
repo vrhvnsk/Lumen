@@ -44,32 +44,10 @@ def test_parse_movie_from_tmdb_payload():
     m = parse_movie(payload)
     assert m["year"] == 2010
     assert m["genres"] == ["Drama", "Thriller"]
-    assert m["popularity"] is None and m["vote_count"] is None   # absent in this payload
     assert m["director"] == "Dir"
     assert m["actors"] == [f"Actor {i}" for i in range(5)]
     assert m["keywords"] == ["dream"]
     assert m["poster_url"] == "https://image.tmdb.org/t/p/w500/abc.jpg"
-
-
-def test_parse_movie_keeps_tmdb_popularity():
-    m = parse_movie({"title": "Hit", "popularity": 123.4, "vote_count": 5000})
-    assert m["popularity"] == 123.4 and m["vote_count"] == 5000
-
-
-def test_parse_movie_keeps_rating_and_language():
-    m = parse_movie({"title": "Hit", "vote_average": 7.8, "vote_count": 900, "original_language": "ko"})
-    assert m["vote_average"] == 7.8 and m["original_language"] == "ko"
-
-
-def test_popularity_scores_from_field_and_from_rank():
-    from app.search import SearchEngine
-    engine = SearchEngine.__new__(SearchEngine)          # no index needed for this check
-
-    engine.movies = [{"popularity": 5.0}, {"popularity": 50.0}, {"popularity": 1.0}]
-    assert list(engine._popularity_scores()) == [0.5, 1.0, 0.0]   # percentile of the field
-
-    engine.movies = [{}, {}, {}]                                   # old data: id order = popularity order
-    assert list(engine._popularity_scores()) == [1.0, 0.5, 0.0]
 
 
 def test_parse_movie_handles_missing_fields():

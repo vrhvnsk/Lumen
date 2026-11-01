@@ -67,10 +67,6 @@ def parse_movie(details: dict) -> dict:
         "keywords": [k["name"] for k in (details.get("keywords") or {}).get("keywords", [])],
         "overview": details.get("overview") or "",
         "poster_url": f"{IMAGE_BASE}{poster}" if poster else None,
-        "popularity": details.get("popularity"),   # TMDB's popularity score (changes daily)
-        "vote_count": details.get("vote_count"),
-        "vote_average": details.get("vote_average"),        # 0-10 TMDB user rating
-        "original_language": details.get("original_language"),
     }
 
 

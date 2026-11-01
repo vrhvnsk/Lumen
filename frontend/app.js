@@ -27,18 +27,6 @@ const WEB_SIZES = {
 
 const $ = (selector, root = document) => root.querySelector(selector);
 
-// How strongly well-known films are favoured in the result order (0 = pure best match).
-let popularity = 0.35;
-let titleWeight = null;      // null = decided automatically from the query
-let hideObscure = false;
-let hasVotes = false;        // set from /api/health: does the dataset carry ratings and vote counts?
-let lastSearch = null;       // remembered so changing a setting can re-run it
-
-// What "Hide obscure films" means. With ratings in the data we use them; without,
-// we keep only the best-known 40 % of the dataset.
-const OBSCURE_WITH_VOTES = { min_votes: 150, min_rating: 5.5 };
-const OBSCURE_BY_POPULARITY = { min_popularity: 0.6 };
-
 function el(tag, props = {}, ...children) {
   const node = document.createElement(tag);
   for (const [key, value] of Object.entries(props)) {
@@ -102,54 +90,42 @@ function poster(movie) {
 const statusEl = $("#status");
 const resultsEl = $("#results");
 const headingEl = $("#results-heading");
-const headEl = $("#results-head");
 
 function setStatus(message, isError = false) {
   statusEl.textContent = message;
   statusEl.classList.toggle("error", isError);
 }
 
-function renderResults(movies, heading, explainThemes, note = "") {
+function renderResults(movies, heading, explainThemes) {
   resultsEl.replaceChildren();
   movies.forEach((m) => movieCache.set(m.id, { ...m, _why: explainThemes ? m.explanation.matched_themes : [] }));
 
-  headEl.hidden = false;
+  headingEl.hidden = false;
   headingEl.textContent = heading;
-  setStatus(movies.length ? note : "No matches. Try describing the plot in different words, or switch off Hide obscure films.");
+  setStatus(movies.length ? "" : "No matches. Try describing the plot in different words.");
 
   for (const m of movies) {
     const pct = m.explanation.similarity_pct;
-    const exact = Boolean(m.explanation.matched_title);
     resultsEl.append(el(
       "button",
       { class: "card", type: "button", onclick: () => openMovie(m.id) },
       poster(m),
       el("h3", {}, m.title),
       el("span", { class: "year" }, m.year ? String(m.year) : "Year unknown"),
-      el("div", { class: "sim", role: "img", "aria-label": exact ? "Title match" : `Similarity ${pct}%` },
-        el("span", { style: `width:${exact ? 100 : Math.max(4, Math.min(100, pct))}%` })),
-      el("span", { class: exact ? "sim-label exact" : "sim-label" }, exact ? "Title match" : `${pct}% similar`),
+      el("div", { class: "sim", role: "img", "aria-label": `Similarity ${pct}%` },
+        el("span", { style: `width:${Math.max(4, Math.min(100, pct))}%` })),
+      el("span", { class: "sim-label" }, `${pct}% similar`),
     ));
   }
 }
 
-async function runSearch(path, body, heading, button, explainThemes, rerun = false) {
-  lastSearch = { path, body, heading, button, explainThemes };
+async function runSearch(path, body, heading, button, explainThemes) {
   button.disabled = true;
   setStatus("Searching…");
   try {
-    const isText = path === "/api/search";
-    const data = await api(path, {
-      ...body,
-      popularity,
-      ...(isText ? { title_weight: titleWeight } : {}),
-      ...(hideObscure ? (hasVotes ? OBSCURE_WITH_VOTES : OBSCURE_BY_POPULARITY) : {}),
-    });
-    let note = "";
-    if (isText && data.anchor) note = `Showing "${data.anchor.title}" first, then films similar to it.`;
-    else if (isText && titleWeight === null && data.weights && data.weights.title >= 0.4) note = "This looks like a title, so title matches count more. Change it under Fine-tune.";
-    renderResults(data.results, heading, explainThemes, note);
-    if (!rerun) headEl.scrollIntoView({ behavior: reducedMotion() ? "auto" : "smooth" });
+    const data = await api(path, body);
+    renderResults(data.results, heading, explainThemes);
+    headingEl.scrollIntoView({ behavior: reducedMotion() ? "auto" : "smooth" });
   } catch (err) {
     setStatus(err.message, true);
   } finally {
@@ -206,68 +182,6 @@ moodForm.addEventListener("submit", (event) => {
   runSearch("/api/mood-search", body, "Movies that fit this mood", $("button[type=submit]", moodForm), false);
 });
 
-/* ---------- result settings: order, hide obscure films, fine-tune ---------- */
-
-function rerun() {
-  if (!lastSearch) return;
-  const { path, body, heading, button, explainThemes } = lastSearch;
-  runSearch(path, body, heading, button, explainThemes, true);
-}
-
-let rerunTimer = null;
-const rerunSoon = () => { clearTimeout(rerunTimer); rerunTimer = setTimeout(rerun, 300); };
-
-const sortButtons = document.querySelectorAll("#sort-by button");
-const popularitySlider = $("#ft-popularity");
-const popularityOut = $("#ft-popularity-out");
-
-function setPopularity(value) {
-  popularity = value;
-  popularitySlider.value = String(Math.round(value * 100));
-  popularityOut.textContent = popularitySlider.value;
-  // The three preset buttons light up only when the value matches one of them.
-  sortButtons.forEach((b) => b.setAttribute("aria-pressed", String(Number(b.dataset.popularity) === value)));
-}
-
-sortButtons.forEach((button) => button.addEventListener("click", () => {
-  setPopularity(Number(button.dataset.popularity));
-  rerun();
-}));
-
-popularitySlider.addEventListener("input", () => {
-  setPopularity(Number(popularitySlider.value) / 100);
-  rerunSoon();
-});
-
-const titleSlider = $("#ft-title");
-const titleAuto = $("#ft-title-auto");
-const titleOut = $("#ft-title-out");
-
-function updateTitleControls() {
-  titleSlider.disabled = titleAuto.checked;
-  titleWeight = titleAuto.checked ? null : Number(titleSlider.value) / 100;
-  titleOut.textContent = titleAuto.checked ? "Auto" : titleSlider.value;
-}
-titleAuto.addEventListener("change", () => { updateTitleControls(); rerun(); });
-titleSlider.addEventListener("input", () => { updateTitleControls(); rerunSoon(); });
-
-const hideButton = $("#hide-obscure");
-hideButton.addEventListener("click", () => {
-  hideObscure = !hideObscure;
-  hideButton.setAttribute("aria-pressed", String(hideObscure));
-  rerun();
-});
-
-const fineButton = $("#finetune-toggle");
-const finePanel = $("#finetune");
-fineButton.addEventListener("click", () => {
-  finePanel.hidden = !finePanel.hidden;
-  fineButton.setAttribute("aria-expanded", String(!finePanel.hidden));
-});
-
-// Ask the server whether the dataset has ratings, so "Hide obscure films" can use them.
-api("/api/health").then((h) => { hasVotes = Boolean(h.has_votes); }).catch(() => { /* keep the default */ });
-
 /* ---------- tabs ---------- */
 
 const tabs = [$("#tab-describe"), $("#tab-mood")];
@@ -302,10 +216,10 @@ $("#detail-close").addEventListener("click", () => dialog.close());
 dialog.addEventListener("click", (event) => { if (event.target === dialog) dialog.close(); }); // backdrop click
 dialog.addEventListener("close", hideTip);
 
-for (const button of document.querySelectorAll("#web-size button")) {
+for (const button of document.querySelectorAll(".size button")) {
   button.addEventListener("click", async () => {
     webSize = button.dataset.size;
-    document.querySelectorAll("#web-size button").forEach((b) => b.setAttribute("aria-pressed", String(b === button)));
+    document.querySelectorAll(".size button").forEach((b) => b.setAttribute("aria-pressed", String(b === button)));
     if (currentId !== null) await loadGraph(currentId);
   });
 }

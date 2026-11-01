@@ -1,5 +1,0 @@
-# Caddy gets and renews the HTTPS certificate for $DOMAIN automatically.
-{$DOMAIN} {
-	encode gzip
-	reverse_proxy lumen:7860
-}
